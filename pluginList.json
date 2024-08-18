@@ -1,9 +1,11 @@
 [
   {
+    "id": "pluginStore",
     "name": "PYLXU/pluginStore",
     "uiName": "插件商店",
     "version": "releases"
   },{
+    "id": "ncm",
     "name": "Simsv-Software/SimMusic-NCM-Ext",
     "uiName": "NCM扩展",
     "version": "package.json"
