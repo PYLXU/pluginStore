@@ -1,5 +1,5 @@
 async function fetchPluginList() {
-    const response = await fetch('https://raw.githubusercontent.com/PYLXU/pluginStore/main/pluginList.json');
+    const response = await fetch('https://mirror.ghproxy.com/https://raw.githubusercontent.com/PYLXU/pluginStore/main/pluginList.json');
     if (!response.ok) {
         throw new Error(`插件列表载入失败: ${response.status} ${response.statusText}（请确保您能够连接到Github）`);
     }
@@ -8,7 +8,7 @@ async function fetchPluginList() {
 
 async function fetchLatestRelease(repoName) {
     const [owner, repo] = repoName.split('/');
-    const url = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
+    const url = `https://proxies.3r60.top/https://api.github.com/repos/${owner}/${repo}/releases/latest`;
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`无法获取插件构建，存储库： ${repoName}: ${response.status} ${response.statusText}`);
@@ -17,19 +17,22 @@ async function fetchLatestRelease(repoName) {
 }
 
 async function fetchManifest(repoName, tag) {
-    const [owner, repo] = repoName.split('/');
-    const url = `https://raw.githubusercontent.com/${owner}/${repo}/${tag}/manifest.json`;
+    const url = `https://mirror.ghproxy.com/https://raw.githubusercontent.com/${repoName}/${tag}/manifest.json`;
     const response = await fetch(url);
     if (!response.ok) {
-        throw new Error(`Failed to fetch manifest.json for ${repoName}: ${response.status} ${response.statusText}`);
+        throw new Error(`清单获取失败|${repoName}: ${response.status} ${response.statusText}`);
     }
     return await response.json();
 }
 
-async function getLatestZipUrl(repoName, tag) {
-    const [owner, repo] = repoName.split('/');
-    const url = `https://github.com/${owner}/${repo}/archive/refs/tags/${tag}.zip`;
-    return url;
+async function fetchPackageJson(repoName, tag) {
+    const url = `https://mirror.ghproxy.com/https://raw.githubusercontent.com/${repoName}/${tag}/package.json`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+        throw new Error(`清单获取失败|${repoName}: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
 }
 
 function insertAfter(newElement, targetElement) {
@@ -43,29 +46,45 @@ function insertAfter(newElement, targetElement) {
 
 async function loadStoreData() {
     const extensionContainer = document.getElementById("extensionShopContainer");
+    extensionContainer.innerHTML = "";
     try {
         const plugins = await fetchPluginList();
         for (const plugin of plugins) {
             const repoName = plugin.name;
             try {
                 const release = await fetchLatestRelease(repoName);
-                const manifest = await fetchManifest(repoName, release.tag_name);
 
                 const owner = repoName.split('/')[0];
-
+                const packageName = plugin.id;
+                const version = plugin.version == "releases" ? release.tag_name : (await fetchPackageJson(repoName, release.tag_name)).version;
                 const onlinePluginList = document.createElement('div');
+
+                const extData = await ExtensionRuntime.getExtData();
+
+                let buttonText;
+                let buttonDisabled = false;
+
+                if (extData.hasOwnProperty(packageName)) {
+                    if (extData[packageName].version == version) {
+                        buttonText = '已安装';
+                        buttonDisabled = true;
+                    } else {
+                        buttonText = '更新';
+                    }
+                } else {
+                    buttonText = '安装';
+                }
 
                 onlinePluginList.innerHTML += `
                     <section>
-                        <div>${manifest.uiName}</div>
+                        <div>${plugin.uiName}<small> - ${owner}</small></div>
                         <span>
-                            <i>&#xEE59;</i> 扩展作者: ${owner}<br>
-                            <i>&#xEE59;</i> 扩展包名: ${manifest.packageId}<br>
-                            <i>&#xEE51;</i> 扩展版本: ${release.tag_name}<br>
+                            <i>&#xEE59;</i> 扩展包名: ${packageName}<br>
+                            <i>&#xEE51;</i> 扩展版本: ${version}<br>
                         </span>
                     </section>
-                    <button class="sub" onclick="alert('${getLatestZipUrl(repoName, release.tag_name)}')">安装</button>
-            `;
+                    <button class="sub" onclick="this.setAttribute('disabled', 'true');downloadAndInstallPlugin('https://mirror.ghproxy.com/https://github.com/${repoName}/releases/download/${release.tag_name}/extension.zip')" ${buttonDisabled ? 'disabled' : ''}>${buttonText}</button>
+                `;
                 extensionContainer.appendChild(onlinePluginList);
 
             } catch (error) {
@@ -101,7 +120,7 @@ async function loadStoreData() {
 
 function includeStyleElement(styles, styleId) {
     if (document.getElementById(styleId)) {
-        return
+        return;
     }
     var style = document.createElement("style");
     style.id = styleId;
@@ -111,6 +130,12 @@ function includeStyleElement(styles, styleId) {
     } else {
         style.appendChild(document.createTextNode(styles));
     }
+}
+
+function includeScriptElement(scripts) {
+    var script = document.createElement("script");
+    script.textContent = scripts; // 使用 textContent 而不是 innerHTML 以避免 XSS 安全警告
+    document.body.appendChild(script);
 }
 
 var styles = `
@@ -151,7 +176,58 @@ var styles = `
     white-space: nowrap;
 }
 `;
+
 includeStyleElement(styles, "extensionShopPageCSS");
+
+var scripts = `
+async function downloadAndInstallPlugin(url,buttonElement) {
+    const tempDir = require('os').tmpdir();
+    const filename = url.substring(url.lastIndexOf('/') + 1);
+    const filePath = path.join(tempDir, filename);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.onprogress = function (event) {
+        if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            console.log(\`下载进度: \${percentComplete.toFixed(2)}%\`);
+        }
+    };
+
+ xhr.onload = function () {
+    if (xhr.status === 200) {
+        const blob = xhr.response;
+        const fileReader = new FileReader();
+
+        fileReader.onloadend = function () {
+            const buffer = Buffer.from(fileReader.result);
+            fs.writeFile(filePath, buffer, async function (err) {
+                if (err) {
+                    console.error(\`写入文件失败: \${err}\`);
+                } else {
+                    console.log(\`文件已保存至: \${filePath}\`);
+                    const zipFileBuffer = await fs.promises.readFile(filePath);
+                    const file = new File([zipFileBuffer], path.basename(filePath), { type: 'application/zip' });
+                    ExtensionRuntime.install(file);
+                }
+            });
+        };
+
+        fileReader.readAsArrayBuffer(blob); // Ensure xhr.response is a Blob
+    } else {
+        console.error(\`下载失败，状态码: \${xhr.status}\`);
+    }
+};
+
+    xhr.onerror = function () {
+        console.error(\`下载出错\`);
+    };
+    xhr.open('GET', url, true);
+    xhr.responseType = 'blob'; // Ensure xhr.responseType is set to 'blob'
+    xhr.send();
+}`;
+
+includeScriptElement(scripts);
 
 // 置入左栏商店按钮
 
@@ -176,7 +252,7 @@ extensionShopPage.classList.add("page");
 extensionShopPage.innerHTML = `<div class="header">
 						<i></i> 扩展商店
 					</div>
-                    <div id="extensionShopContainer"></div>`;
+                    <div id="extensionShopContainer">列表加载中...</div>`;
 
 var Right = document.getElementsByClassName("right")[0];
 Right.appendChild(extensionShopPage);
