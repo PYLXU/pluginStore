@@ -1,0 +1,10 @@
+{
+    "packageId": "pluginStore",
+    "extName": "扩展商店",
+    "uiName": "扩展商店",
+    "version": "1.0",
+    "entries":[
+        "main.js"
+    ]
+  }
+  
