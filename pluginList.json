@@ -9,5 +9,10 @@
     "name": "Simsv-Software/SimMusic-NCM-Ext",
     "uiName": "NCM扩展",
     "version": "package.json"
+  },{
+    "id": "neteaseRecommend",
+    "name": "/PYLXU/neteaseRecommend/",
+    "uiName": "NCM扩展 - 音乐推荐模块",
+    "version": "releases"
   }
 ]
