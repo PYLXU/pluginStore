@@ -236,7 +236,7 @@ var pluginShopButton = document.createElement("div");
 pluginShopButton.setAttribute("data-page-id", "extensionShopPage");
 pluginShopButton.setAttribute("onclick", "switchRightPage('extensionShopPage')");
 
-pluginShopButton.innerHTML = '<i></i> 商店';
+pluginShopButton.innerHTML = '<i></i> 商店';
 
 var leftBar = document.getElementsByClassName("leftBar")[0];
 leftBar.appendChild(pluginShopButton);
@@ -250,7 +250,7 @@ extensionShopPage.setAttribute("hidden", "");
 extensionShopPage.classList.add("page");
 
 extensionShopPage.innerHTML = `<div class="header">
-						<i></i> 扩展商店
+						<i></i> 扩展商店
 					</div>
                     <div id="extensionShopContainer">列表加载中...</div>`;
 
