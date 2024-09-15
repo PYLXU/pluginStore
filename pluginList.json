@@ -5,14 +5,19 @@
     "uiName": "插件商店",
     "version": "releases"
   },{
-    "id": "ncm",
-    "name": "Simsv-Software/SimMusic-NCM-Ext",
-    "uiName": "NCM扩展",
-    "version": "package.json"
+    "id": "neteaseRecommend",
+    "name": "PYLXU/neteaseSupport",
+    "uiName": "NCM扩展（第三方修复）",
+    "version": "releases"
   },{
     "id": "neteaseRecommend",
     "name": "PYLXU/neteaseRecommend",
     "uiName": "NCM扩展 - 音乐推荐模块",
     "version": "releases"
+  },{
+    "id": "ncm",
+    "name": "Simsv-Software/SimMusic-NCM-Ext",
+    "uiName": "NCM扩展（官方）",
+    "version": "package.json"
   }
 ]
