@@ -1,5 +1,5 @@
 # pluginSotre
-[SimMusic扩展]适用于SimMusic的扩展商店
+[SimMusic扩展]适用于SimMusic的第三方扩展商店
 
 ## 扩展截图
 
