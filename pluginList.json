@@ -5,6 +5,11 @@
     "uiName": "插件商店",
     "version": "releases"
   },{
+    "id": "recognition",
+    "name": "Simsv-Software/SimMusic-Recognition-Ext",
+    "uiName": "听歌识曲",
+    "version": "releases"
+  },{
     "id": "ncm",
     "name": "PYLXU/neteaseSupport",
     "uiName": "NCM扩展（第三方修复）",
